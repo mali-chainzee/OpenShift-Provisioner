@@ -1,0 +1,44 @@
+apiVersion: v1
+additionalTrustBundle: |
+"{{ lookup('file', '{{ local_os_cacert }}') | indent(2, False) }}"
+baseDomain: example.com
+compute:
+- architecture: amd64
+  hyperthreading: Enabled
+  name: worker
+  platform: {}
+  replicas: 3
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  platform: {}
+  replicas: 3
+metadata:
+  creationTimestamp: null
+  name: {{ cluster_name }}
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineNetwork:
+  - cidr: 10.0.0.0/16
+  networkType: OpenShiftSDN
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  openstack:
+    cloud: {{ os_cloud }}
+    clusterOSImage: {{ existing_image_name }}
+    computeFlavor: {{ computer_flavor }}
+    externalDNS:
+    {% for item in {{ external_dns_ips }} %}
+    - {{ item }}
+    {% endfor %}
+    externalNetwork: external_network
+    lbFloatingIP: {{ lb_floating_ip_addr }}
+    octaviaSupport: "0"
+    region: ""
+    trunkSupport: "1"
+publish: External
+pullSecret: {{ ocp4_pull_secret | to_json }}

@@ -1,0 +1,71 @@
+---
+# tasks file for install-dependencies
+- name: Register and subscribe to multiple pools.
+  redhat_subscription:
+    state: present
+    username: "{{ redhat_subscription_username }}"
+    password: "{{ redhat_subscription_password }}"
+    auto_attach: true
+  check_mode: yes  
+  when: not ansible_check_mode
+  become: true
+
+- name: Install pip3
+  dnf:
+    name:  python3-pip
+    state: present
+  check_mode: yes  
+  when: not ansible_check_mode
+  become: true
+
+- name: Install OpenStack client
+  pip:
+    name: python-openstackclient
+    state: present
+  check_mode: yes  
+  when: not ansible_check_mode
+  become: true
+
+- name: Install wget
+  dnf:
+    name: wget
+    state: present
+  check_mode: yes  
+  when: not ansible_check_mode
+  become: true
+
+- name: Make directory for OCP install
+  file:
+    path: "{{ home_dir }}/openshift-install"
+    state: directory  
+
+- name: Check if openshift-install exists
+  stat:
+    path: "{{ home_dir }}/openshift-install"
+  register: stat_result
+
+- name: Download OpenShift installer 
+  unarchive:
+    src: "{{ ocp4_installer_url }}"
+    dest: "{{ home_dir/openshift-install }}"
+    remote_src: yes
+  when: not stat_result.stat.exists
+  become: true
+
+# - name: Install Ansible
+#   pip:
+#     name: ansible
+#     state: present
+#   become: true
+#   when: not ansible_check_mode
+#   check_mode: yes
+
+
+
+# - name: clone ocp provisioner git repo
+#   git: 
+#     repo: "{{ ocp_provisioner_repo }}"
+#     dest: "{{ install_dir }}"
+#   notify:
+#   - run ocp install Ansible 
+

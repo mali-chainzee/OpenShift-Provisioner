@@ -1,0 +1,49 @@
+---
+# tasks file for configure-osp
+
+- name: create /etc/openstack
+  file:
+    path: /etc/openstack
+    state: directory
+  become: true
+
+- name: copy over OpenStack CA
+  copy:
+    src: "{{ local_os_cacert }}"
+    dest: "{{ os_cacert }}"
+  become: true
+
+- name: create clouds.yaml
+  template:
+    src: clouds.yaml.j2
+    dest: /etc/openstack/clouds.yaml
+  become: true
+
+- name: Create floating ip for load balancer API
+  shell: openstack floating ip create {{ external_network }} --description "API {{ cluster_domain_name }}" --os-cloud={{ os_cloud }} -f value -c floating_ip_address
+  register: lb_floating_ip
+  
+- name: Create floating ip for Ingress
+  shell: openstack floating ip create {{ external_network }} --description "Ingress {{ cluster_domain_name }}" --os-cloud={{ os_cloud }} -f value -c floating_ip_address
+  register: ingress_floating_ip
+
+- set_fact:
+    lb_floating_ip_addr={{ lb_floating_ip.stdout }}
+    ingress_floating_ip_addr={{ ingress_floating_ip.stdout }}
+
+- name: create local /etc/hosts entry for cluster
+  copy:
+  dest: /etc/hosts"
+  content: >
+    {{ lb_floating_ip_addr }}  api.maliocp.example.com
+    {{ ingress_floating_ip_addr }}  console-openshift-console.apps.maliocp.example.com
+    {{ ingress_floating_ip_addr }}  integrated-oauth-server-openshift-authentication.apps.maliocp.example.com
+    {{ ingress_floating_ip_addr }}  oauth-openshift.apps.maliocp.example.com
+    {{ ingress_floating_ip_addr }}  prometheus-k8s-openshift-monitoring.apps.example.com
+    {{ ingress_floating_ip_addr }}  grafana-openshift-monitoring.apps.example.com
+  become: true
+
+- debug:
+    var: 
+      - lb_floating_ip_addr
+      - ingress_floating_ip_addr

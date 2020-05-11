@@ -1,0 +1,37 @@
+home_dir: "/home/{{ ansible_ssh_user }}"
+
+# cluster namings 
+cluster_name: "maliocp"
+base_domain: "example.com"
+cluster_domain_name: "{{ cluster_name }}.{{ base_domain }}"
+
+# Red Hat subscription credentials for bsation RHEL8
+redhat_subscription_username: "chainzeeli12"
+redhat_subscription_password: "M@rkGPA4.01996"
+
+# OCP4 installer info
+ocp4_installer_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-install-linux.tar.gz"
+ocp4_pull_secret: "{{ lookup('file', '~/.ocp4_pull_secret') | from_json }}"
+ocp4_dir: "{{ home_dir }}/ocp-install"
+
+# OSP fields for install-config
+local_os_cacert: "/home/mali/.config/openstack/controller14.v2v.bos.redhat.com-ca.pem"
+computer_flavor: "m1.medium"
+external_network: "external_network"
+existing_image_name: "maliocp-l6bnq-rhcos"
+external_dns_ips:
+  - '10.19.12.11'
+  - '10.19.2.120'
+
+# OSP credentials
+os_cloud: "openstack"
+os_auth_url: "https://controller14.v2v.bos.redhat.com:13000/v3"
+os_username: "mali"
+os_password: "100n0tRoot_"
+os_project_id: "32146583df074df69b0f0efdce2682ff"
+os_project_name: "mali"
+os_cacert: "/etc/openstack/controller14.v2v.bos.redhat.com-ca.pem"
+os_user_domain_name: "default"
+os_region_name: "regionOne"
+os_interface: "public"
+os_identity_api_version: "v3"

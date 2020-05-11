@@ -1,0 +1,33 @@
+---
+# tasks file for pre-install
+#- name: Authenticate to the cloud
+#  os_auth:
+#    cloud: "openstack"
+    
+#- name: Get the information back just about the openstack cloud
+#  os_client_config:
+#    clouds:
+#      - openstack
+- name: Generate Install-config.yaml 
+  tags: config
+  template:
+    dest: "{{ ocp4_dir }}/{{ install_dir }}/{{ item }}"
+    src: install-config.yaml.j2
+  with_items:
+    - install-config.yaml
+    - install-config.copy.yaml
+
+
+# - name: create local /etc/hosts entry for cluster
+#   tags: 
+#   connection: local
+#   copy:
+#   dest: /etc/hosts"
+#   content: >
+#     {{ bastion_public_ip_address }}
+#     bastion.{{ cluster_domain_name }}
+#     api.{{ cluster_domain_name }}
+#     console-openshift-console.apps.{{ cluster_domain_name }}
+#     oauth-openshift.apps.{{ cluster_domain_name }}
+
+

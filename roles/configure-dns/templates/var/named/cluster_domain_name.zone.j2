@@ -1,0 +1,13 @@
+$TTL 900
+
+@                     IN SOA bastion.{{ cluster_domain_name }}. hostmaster.{{ cluster_domain_name }}. (
+                               2019062002 1D 1H 1W 3H
+                             )
+                      IN NS bastion.{{ cluster_domain_name }}.
+
+bastion               IN A {{ cluster_subnet_prefix }}.1
+
+api                   IN A {{ bastion_public_ip_address }}
+apps                  IN A {{ bastion_public_ip_address }}
+*.apps                IN A {{ bastion_public_ip_address }}
+

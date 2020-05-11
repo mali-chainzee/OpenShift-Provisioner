@@ -1,0 +1,6 @@
+---
+# handlers file for install-dependencies
+- name: Run Anisible OCP install playbook
+  shell:
+    Ansible
+  listen: "run ocp install Ansible"
