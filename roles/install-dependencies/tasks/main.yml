@@ -36,21 +36,29 @@
 
 - name: Make directory for OCP install
   file:
-    path: "{{ home_dir }}/openshift-install"
+    path: "{{ ocp4_dir }}"
     state: directory  
 
-- name: Check if openshift-install exists
+- name: Check if ocp-install directory exists
   stat:
-    path: "{{ home_dir }}/openshift-install"
+    path: "{{ ocp4_dir }}"
   register: stat_result
+
+- name: Make install-dir for openshift-install
+  file:
+    path: "{{ ocp4_install_dir }}"
+    state: directory  
+  when: not stat_result.stat.exists
 
 - name: Download OpenShift installer 
   unarchive:
     src: "{{ ocp4_installer_url }}"
-    dest: "{{ home_dir/openshift-install }}"
+    dest: "{{ ocp4_dir }}"
     remote_src: yes
-  when: not stat_result.stat.exists
-  become: true
+    creates: "{{ ocp4_dir }}/openshift-install"
+  when: not ansible_check_mode
+
+
 
 # - name: Install Ansible
 #   pip:

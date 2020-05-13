@@ -1,9 +1,0 @@
----
-- name: Install required software on bastion
-  hosts: 
-      localhost:
-      vars:
-        ansible_connection: local
-
-  roles:
-  - install-dependencies 

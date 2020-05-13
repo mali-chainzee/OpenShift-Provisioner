@@ -1,0 +1,7 @@
+---
+- name: Provision OSP Bastion Machine with required software
+  hosts: localhost
+  connection: local
+  roles:
+  - create-bastion
+   

@@ -1,0 +1,4 @@
+- name: Provision OSP Bastion Machine with required software
+  hosts: bastion
+  roles:
+  - destroy-cluster 

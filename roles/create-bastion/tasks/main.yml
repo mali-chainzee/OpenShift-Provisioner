@@ -1,0 +1,55 @@
+---
+# tasks file for create-bastion.yaml
+- name: Generate keypair for bastion connection
+  os_keypair:
+    state: present
+    cloud: "{{ os_cloud }}"
+    name: ocp4-bastion-keys 
+    public_key_file: "{{ ansible_ssh_private_key_file }}.pub"
+#  check_mode: yes
+
+- name: Create bastion
+  os_server:
+    state: present
+    cloud: "{{ os_cloud }}"  
+    name: ocp4-bastion
+    image: "{{ bastion_image_name }}"
+    key_name: ocp4-bastion-keys
+    flavor: "{{ ocp4_bastion_flavor }}"
+    nics:
+      - net-name: "{{ external_network }}"
+    userdata: |
+      #cloud-config
+      users: 
+        - default
+        - name: developer
+          sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+          ssh_authorized_keys:
+            - {{ lookup('file', '{{ ansible_ssh_private_key_file }}.pub') }}
+    timeout: 400
+    wait: yes
+# check_mode: yes
+
+- name: Retrieve bastion IP address
+  os_server_info:
+    cloud: "{{ os_cloud }}"
+    server: ocp4-bastion
+  register: bastion_info
+  notify: added bastion to inventory
+
+- set_fact: bastion_public_ip="{{ bastion_info.openstack_servers[0].accessIPv4 }}"
+
+- debug: 
+    msg: "{{ bastion_public_ip }}"
+
+- name: Add the newly created bastion to hosts inventory
+  lineinfile: 
+    state: present
+    path: ../inventory
+    regexp: '\d+.\d+.\d+.\d+'
+    insertafter: '\[bastion\]'
+    line: "{{ bastion_public_ip }}"
+
+- meta: refresh_inventory
+
+
