@@ -1,0 +1,153 @@
+---
+# tasks file for pre-install
+- block:
+  - name: Make directory for OCP install
+    file:
+      path: "{{ ocp4_dir }}"
+      state: directory  
+
+  - name: Check if ocp-install directory exists
+    stat:
+      path: "{{ ocp4_dir }}"
+    register: stat_result
+   
+  - debug:
+      var: stat_result
+
+  - name: Make install-dir for openshift-install
+    file:
+      path: "{{ ocp4_install_dir }}"
+      state: directory
+
+
+  - name: Download OpenShift installer 
+    unarchive:
+      src: "{{ ocp4_installer_url }}"
+      dest: "{{ ocp4_dir }}"
+      remote_src: yes
+      creates: "{{ ocp4_dir }}/openshift-install"
+
+  - name: create /etc/openstack on bastion
+    file:
+      path: /etc/openstack/
+      state: directory
+    become: true
+
+  - name: copy over clouds.yaml to bastion
+    copy:
+      src: ~/.config/openstack/clouds.yaml
+      dest: /etc/openstack/clouds.yaml
+    become: true
+
+  - name: create ssh keypair for ocp4 master access
+    shell: ssh-keygen -t rsa -b 2048 -N '' -C 'developer' -f ~/.ssh/id_rsa
+    args:
+      creates: ~/.ssh/id_rsa
+
+  - name: slurp ssh pubkey
+    slurp:
+      src: ~/.ssh/id_rsa.pub
+    register: bastion_pubkey
+
+  - name: Create floating ip for load balancer API
+    shell: openstack floating ip create {{ external_network }} --description "API {{ cluster_domain_name }}" --tag {{ cluster_name }} --os-cloud={{ os_cloud }} -f value -c floating_ip_address
+    register: lb_floating_ip
+  
+  - name: Create floating ip for Ingress
+    shell: openstack floating ip create {{ external_network }} --description "Ingress {{ cluster_domain_name }}" --tag {{ cluster_name }} --os-cloud={{ os_cloud }} -f value -c floating_ip_address
+    register: ingress_floating_ip
+
+  - set_fact:
+      lb_floating_ip={{ lb_floating_ip.stdout }}
+      ingress_floating_ip={{ ingress_floating_ip.stdout }}
+
+  - name: Generate install-config.yaml 
+    template:
+      dest: "{{ ocp4_install_dir }}/{{ item }}"
+      src: install-config.yaml.j2
+    with_items:
+      - install-config.yaml
+      - install-config.copy.yaml
+
+  - name: create local /etc/hosts entry for cluster
+    copy:
+      dest: /etc/hosts
+      content: >
+        {{ lb_floating_ip }}  api.{{ cluster_domain_name }}
+        {{ ingress_floating_ip }}  console-openshift-console.apps.{{ cluster_domain_name }}
+        {{ ingress_floating_ip }}  integrated-oauth-server-openshift-authentication.apps.{{ cluster_domain_name }}
+        {{ ingress_floating_ip }}  oauth-openshift.apps.{{ cluster_domain_name }}
+        {{ ingress_floating_ip }}  prometheus-k8s-openshift-monitoring.apps.{{ cluster_domain_name }}
+        {{ ingress_floating_ip }}  grafana-openshift-monitoring.apps.{{ cluster_domain_name }}
+    become: true
+
+  - name: Run openshift-install
+    shell: "./openshift-install create cluster --dir={{ ocp4_install_dir }} --log-level=debug"
+    args:
+      chdir: "{{ ocp4_dir }}"
+      creates: "{{ ocp4_dir }}/metadata.json"
+    become: true
+    register: installer_log
+
+  - name: Error message
+    debug:
+      msg: "{{ installer_log.stdout }}"
+    when: installer_log
+
+  - name: Fetch kubadmin password
+    shell: cat ~/{{ ocp4_install_dir }}/auth/kubeadmin-password
+    become: true
+    register: password
+
+  - name: Fetch cluster id
+    shell: cat ~/{{ ocp4_dir }}/metadata.json
+    become: true
+    register: cluster_info
+
+  - set_fact:
+      cluster_id: cluster_info.infraID
+
+  - name: Attach IP to ingress port
+    shell: openstack floating ip set --port {{ cluster_name }}.{{ cluster_id }}-ingress-port {{ ingress_floating_ip }}
+
+  - name: Cluster Info
+    debug:
+      msg: [
+        "access web console at https://console-openshift-console.apps.{{cluster_domain_name}}", 
+        "username: kubeadmin",
+        "password: {{ password.stdout }}"
+      ]
+
+  - name: Download OpenShift CLI
+    unarchive:
+      src: "{{ ocp4_installer_url }}"
+      dest: "/usr/local/bin"
+      remote_src: yes
+      creates:
+      - /usr/local/bin/oc
+      - /usr/local/bin/kubectl
+    become: true
+
+  - name: Create .~/kube dir
+    file: 
+      path: ~/.kube
+      state: directory
+
+  - name: Create .~/kube dir
+    file: 
+      path: ~/.kube
+      state: directory
+    become: true
+
+  - name: Move kubeconfig
+    command: mv {{ ocp4__install_dir }}/auth/kubeconfig ~/.kube/config
+    become: true
+
+  - name: set permissions for kubeconfig
+    file:
+      path: "~/.kube/config"
+      mode: 777
+    become: true
+
+
+  tags: install

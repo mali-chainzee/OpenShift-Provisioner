@@ -1,5 +1,5 @@
 [bastion]
-10.19.2.40
+10.0.110.54
 
 
 [bastion:vars]

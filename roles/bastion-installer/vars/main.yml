@@ -1,0 +1,5 @@
+---
+# bastion configuration
+ocp4_bastion_flavor: "m1.large"
+ansible_ssh_private_key_file: "/home/mali/.ssh/id_rsa" # for connection to bastion from localhost
+bastion_image_name: "rhel-8.2.0-x86_64-released" # image must be in glance

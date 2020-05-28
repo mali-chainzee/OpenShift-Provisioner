@@ -1,0 +1,19 @@
+---
+# tasks file for detroy-cluster
+- block:
+#  - name: Recycle API and Ingress floating ip
+#    shell: openstack floating ip delete --os-cloud={{ os_cloud }} $(openstack floating ip list --os-cloud={{ os_cloud }} --tags "{{ cluster_name }}" -f value -c "ID")
+
+  - name: Detroy ocp4 cluster
+    shell: ./openshift-install destroy cluster --dir={{ ocp4_install_dir }}
+    become: true
+    args: 
+      chdir: "{{ ocp4_dir }}" 
+
+  - name: Delete install directory
+    file:
+      path: "{{ ocp4_install_dir }}"
+      state: absent
+    become: true
+
+  tags: destroy

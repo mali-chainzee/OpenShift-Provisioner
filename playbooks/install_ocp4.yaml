@@ -1,6 +1,0 @@
-- name: Provision OSP Bastion Machine with required software
-  hosts: bastion
-  roles:
-  #- install-dependencies
-  - configure-osp
-  - create-cluster 

@@ -1,0 +1,37 @@
+---
+# tasks file for pre-install
+- name: create ocp4 cluster
+  tags: install
+  include_tasks: create_cluster.yml
+
+- name: destroy ocp4 cluster
+  tags: destroy
+  include_tasks: destroy_cluster.yml
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

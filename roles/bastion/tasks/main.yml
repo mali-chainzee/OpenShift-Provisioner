@@ -1,0 +1,34 @@
+---
+# tasks file for install-dependencies
+- block:
+  - name: Register and subscribe to multiple pools.
+    redhat_subscription:
+      state: present
+      username: "{{ redhat_subscription_username }}"
+      password: "{{ redhat_subscription_password }}"
+      auto_attach: true
+    when: not ansible_check_mode
+    become: true
+
+  - name: Install pip3
+    dnf:
+      name:  python3-pip
+      state: present
+    when: not ansible_check_mode
+    become: true
+
+  - name: Install OpenStack client
+    pip:
+      name: python-openstackclient
+      state: present
+    when: not ansible_check_mode
+    become: true
+
+  - name: Install wget
+    dnf:
+      name: wget
+      state: present 
+    when: not ansible_check_mode
+    become: true
+  
+  tags: configs

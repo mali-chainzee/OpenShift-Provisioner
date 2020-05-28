@@ -1,8 +1,0 @@
-#cloud-config
-users:
-  - name: root
-    ssh_pwauth: True
-    ssh-authorized-keys:
-    - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC/ik6d8FL1qPEKMDZsgDR6y3rqllNQDQNx7LoU0efZlhuE1JbaUllCWcAL0PWAGe506bijAytoTaOhl1SLUFICoHNY8meSOmPbDEyKIFtnvjGYnmYuyME8frk+QmU6I/AwcGi4hns1rqV1aufDCVXDrJCcYIpw00Ho78GyGElAZoy9MGWWQQJ7FbR0W1pucu8OfpL1Rklu535C+wjHnDulgI9DlXhPaVxPClKP45VeXJDPjqYHdXAMlCtw5RnLwP/VQo3w2xoqj8nsig4VqNI5O9XLkA804txmo3BEHAGUZxsMklDm60vPAHBZI6Ed54cU1AMzYeSYc+ltm9aUBPQYvMLRPlOob9v7rtWN5I4M058OAFVHzNm5NoaHn2Y9azz/Ze8E2ZXvJf+1G0lJhOHU07P9XSujwvIAia7keAxw2Tz9gFZbixPpoye2cGaRKpz2BT3MsvNOBmuiurUNhzmLYjfMH9xP4ss9qgdRE9CFKB2Mw3iy9LSEFXVuj9BIJVk= mali@mali.bos.csb 
-
-

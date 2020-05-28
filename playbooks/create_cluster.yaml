@@ -1,0 +1,5 @@
+---
+- name: create ocp4 cluster
+  hosts: bastion
+  roles:
+  - role: ocp4

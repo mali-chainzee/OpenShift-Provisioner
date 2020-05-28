@@ -1,0 +1,38 @@
+apiVersion: v1
+baseDomain: {{ base_domain }}
+compute:
+- architecture: amd64
+  hyperthreading: Enabled
+  name: worker
+  platform: {}
+  replicas: 3
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  platform: {}
+  replicas: 3
+metadata:
+  creationTimestamp: null
+  name: {{ cluster_name }}
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineNetwork:
+  - cidr: 192.168.0.0/16
+  networkType: OpenShiftSDN
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  openstack:
+    cloud: {{ os_cloud }}
+    computeFlavor: {{ computer_flavor }}
+    externalNetwork: {{ external_network }}
+    lbFloatingIP: {{ lb_floating_ip }}
+    octaviaSupport: "0"
+    region: ""
+    trunkSupport: "1"
+publish: External
+pullSecret: '{{ ocp4_pull_secret | to_json }}'
+sshKey: '{{ bastion_pubkey.content | b64decode }}'
