@@ -1,5 +1,6 @@
 ---
 - name: create ocp4 cluster
   hosts: bastion
+  connection: local
   roles:
   - role: ocp4

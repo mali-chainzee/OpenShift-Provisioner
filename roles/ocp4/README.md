@@ -1,38 +1,28 @@
-Role Name
+Install CNV on PSI
 =========
-
-A brief description of the role goes here.
 
 Requirements
 ------------
+Before executing ths ansible role, you need to follow [this guide](https://docs.engineering.redhat.com/display/HSSP/PnT+Resource+Request+Workflow+including+PSI) to request a Red Hat PSI project. To fit one ocp4 cluster in your osp project, `tier 6` is enough. 
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+Obtain your [pull secret](https://cloud.redhat.com/openshift/install/pull-secret) and put it in this repo's root folder with filename `.ocp4_pull_secret`. [vars file](https://github.com/mali-chainzee/OpenShift-Provisioner/tree/master/roles/ocp4/vars) will look for this when generating install-config
+
+Usage
+------------
+Ansible `tags` are used for different stages of cluster intallation. 
+`ansible-playbook playbooks/create_cluster.yml --tags=<options>` 
+
+`--tags=install` creates a cluster without container-native virtulation<br/>
+`--tags=cnv` installs cnv on your existing ocp4 cluster<br/>
+`--tags=destroy` destroys cluster and recycles openstack resources<br/>
 
 Role Variables
 --------------
+Note: Modify ocp4_version if you want to install a different cluster version. New version won't conflict with previous installed versions of ocp4 cluster, but  
+```
+base_domain: #defalult example.com
+cluster_name: #default <kerboros username>
+ocp4_version: #default 4.3
+ocp4_full_version: #default 4.3.13
+```
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
-
-Dependencies
-------------
-
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
-
-Example Playbook
-----------------
-
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).

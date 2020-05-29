@@ -1,18 +1,24 @@
 ---
 # tasks file for pre-install
-- name: create ocp4 cluster
+- name: Create ocp4 cluster
   tags: install
   include_tasks: create_cluster.yml
 
-- name: destroy ocp4 cluster
+- name: Destroy ocp4 cluster
   tags: destroy
   include_tasks: destroy_cluster.yml
 
+- name: Install CNV
+  tags: [ cnv, install ]
+  include_tasks: install_cnv.yml
 
+- name: Wait for kubervirt operator installation finish
+  wait_for:
+    delay: 180
 
-
-
-
+- name: Kubervirt installation done
+  debug:
+    msg: "Kubervirt hco is now in project openshift-snv"
 
 
 

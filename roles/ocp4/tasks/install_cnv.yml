@@ -1,0 +1,16 @@
+---
+# tasks file for cnv
+- name: install python openshift module
+  command: pip3 install openshift
+
+- name: create operator-cnv OperatorGroup
+  k8s:
+    state: present
+    definition: "{{ lookup('file', '{{ item }}') }}"
+  with_items:
+  - 'project.yaml'
+  - 'operatorgroup.yaml'
+  - 'csc.cr.yaml'
+  - 'sub.yaml'
+  - 'cnv-hco.yaml'
+  tags: cnv

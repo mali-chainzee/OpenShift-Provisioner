@@ -4,8 +4,9 @@
   - name: Make directory for OCP install
     file:
       path: "{{ ocp4_dir }}"
-      state: directory  
-
+      state: directory
+    become: false
+  
   - name: Check if ocp-install directory exists
     stat:
       path: "{{ ocp4_dir }}"
@@ -18,7 +19,7 @@
     file:
       path: "{{ ocp4_install_dir }}"
       state: directory
-
+    become: false
 
   - name: Download OpenShift installer 
     unarchive:
@@ -27,17 +28,11 @@
       remote_src: yes
       creates: "{{ ocp4_dir }}/openshift-install"
 
-  - name: create /etc/openstack on bastion
+  - name: Set permission for openshift-install
     file:
-      path: /etc/openstack/
-      state: directory
-    become: true
-
-  - name: copy over clouds.yaml to bastion
-    copy:
-      src: ~/.config/openstack/clouds.yaml
-      dest: /etc/openstack/clouds.yaml
-    become: true
+      path: "{{ ocp4_dir }}/openshift-install"
+      owner: "{{ ansible_ssh_user }}"
+      mode: u=x
 
   - name: create ssh keypair for ocp4 master access
     shell: ssh-keygen -t rsa -b 2048 -N '' -C 'developer' -f ~/.ssh/id_rsa
@@ -69,16 +64,20 @@
       - install-config.yaml
       - install-config.copy.yaml
 
-  - name: create local /etc/hosts entry for cluster
-    copy:
-      dest: /etc/hosts
-      content: >
+  - name: generate /etc/hosts content
+    set_fact:
+      cluster_urls: |
         {{ lb_floating_ip }}  api.{{ cluster_domain_name }}
         {{ ingress_floating_ip }}  console-openshift-console.apps.{{ cluster_domain_name }}
         {{ ingress_floating_ip }}  integrated-oauth-server-openshift-authentication.apps.{{ cluster_domain_name }}
         {{ ingress_floating_ip }}  oauth-openshift.apps.{{ cluster_domain_name }}
         {{ ingress_floating_ip }}  prometheus-k8s-openshift-monitoring.apps.{{ cluster_domain_name }}
         {{ ingress_floating_ip }}  grafana-openshift-monitoring.apps.{{ cluster_domain_name }}
+
+  - name: create local /etc/hosts entry for cluster
+    copy:
+      dest: /etc/hosts
+      content: "{{ cluster_urls }}"
     become: true
 
   - name: Run openshift-install
@@ -86,7 +85,6 @@
     args:
       chdir: "{{ ocp4_dir }}"
       creates: "{{ ocp4_dir }}/metadata.json"
-    become: true
     register: installer_log
 
   - name: Error message
@@ -94,60 +92,70 @@
       msg: "{{ installer_log.stdout }}"
     when: installer_log
 
+  tags: install
+
+- block: 
+  #can remove these after non-user ran openshift-install
+  - name: set permissions for kubeconfig
+    file:
+      path: "{{ ocp4_dir }}"
+      recurse: yes
+      owner: "{{ ansible_ssh_user }}"
+      mode: o+rw
+
+
   - name: Fetch kubadmin password
-    shell: cat ~/{{ ocp4_install_dir }}/auth/kubeadmin-password
-    become: true
+    shell: cat {{ ocp4_install_dir }}/auth/kubeadmin-password
     register: password
 
   - name: Fetch cluster id
-    shell: cat ~/{{ ocp4_dir }}/metadata.json
-    become: true
+    shell: cat {{ ocp4_install_dir }}/metadata.json
     register: cluster_info
 
   - set_fact:
-      cluster_id: cluster_info.infraID
+      cluster_id: "{{ cluster_info.stdout | from_json | json_query('infraID')}}"
 
   - name: Attach IP to ingress port
-    shell: openstack floating ip set --port {{ cluster_name }}.{{ cluster_id }}-ingress-port {{ ingress_floating_ip }}
-
+    shell: openstack floating ip set --os-cloud {{ os_cloud }} --port {{ cluster_id }}-ingress-port 432597cf-09e5-4594-96c4-542bcf6b50ee
+  
   - name: Cluster Info
     debug:
       msg: [
-        "access web console at https://console-openshift-console.apps.{{cluster_domain_name}}", 
-        "username: kubeadmin",
-        "password: {{ password.stdout }}"
+        "To access the cluster on your own machine, copy these to your /etc/hosts",
+     #   "{{ cluster_urls }}",
+        "",
+        "Access web console at https://console-openshift-console.apps.{{ cluster_domain_name }}", 
+        "Username: kubeadmin",
+        "Password: {{ password.stdout }}"
       ]
+    check_mode: yes
+
+# fix this, put oc in /home/bin instead
+  - name: Make bin dir for user
+    file:
+      path: ~/bin
+      state: directory
 
   - name: Download OpenShift CLI
     unarchive:
-      src: "{{ ocp4_installer_url }}"
-      dest: "/usr/local/bin"
+      src: "{{ ocp4_cli_url }}"
+      dest: "~/bin/"
       remote_src: yes
-      creates:
-      - /usr/local/bin/oc
-      - /usr/local/bin/kubectl
-    become: true
+      creates: ~/bin/oc
 
   - name: Create .~/kube dir
     file: 
       path: ~/.kube
       state: directory
-
-  - name: Create .~/kube dir
-    file: 
-      path: ~/.kube
-      state: directory
-    become: true
 
   - name: Move kubeconfig
-    command: mv {{ ocp4__install_dir }}/auth/kubeconfig ~/.kube/config
-    become: true
+    command: mv {{ ocp4_install_dir }}/auth/kubeconfig ~/.kube/config
 
   - name: set permissions for kubeconfig
     file:
       path: "~/.kube/config"
-      mode: 777
-    become: true
+      owner: "{{ ansible_ssh_user }}"
+      mode: o+rw
 
 
-  tags: install
+  tags: config

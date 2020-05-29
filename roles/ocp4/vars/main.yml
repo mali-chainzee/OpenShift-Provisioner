@@ -2,15 +2,15 @@
 # vars file for pre-install
 base_domain: "example.com"
 #cluster_name: "{{ ansible_ssh_user }}"
-cluster_name: "developer2"
+cluster_name: "{{ ansible_ssh_user }}-ds2"
 cluster_domain_name: "{{ cluster_name }}.{{ base_domain }}"
 computer_flavor: "m1.large" #flavor is pre-created on osp       show options in documentation
 external_network: "provider_net_shared_3" # don't need to care
 os_cloud: "rhos-d2"
 # OCP4 installer info. Don't change
 
-ocp4_version: "4.4"
-ocp4_full_version: "4.4.1"
+ocp4_version: "4.3"
+ocp4_full_version: "4.3.13"
 ocp4_installer_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ ocp4_full_version }}/openshift-install-linux.tar.gz"
 ocp4_pull_secret: "{{ lookup('file', '~/.ocp4_pull_secret') | from_json }}" # get rid of this
 ocp4_dir: "/home/{{ ansible_ssh_user }}/openshift-{{ ocp4_full_version }}" 

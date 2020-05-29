@@ -8,6 +8,4 @@ This repo contains playbooks for deploying CNV environment on PNT Shared Insfras
 3. ansible_connection: ssh. host: bastion. Create floating ip, Generate install-config, run openshift-install.  
 
 ## Usage
-### Fill in variables
-Fill in va
-###f
+For instructions on cluser creation, please refer to [roles/ocp4](https://github.com/mali-chainzee/OpenShift-Provisioner/tree/master/roles/ocp4)  
