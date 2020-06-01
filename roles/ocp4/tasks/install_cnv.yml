@@ -1,16 +1,26 @@
 ---
 # tasks file for cnv
-- name: install python openshift module
-  command: pip3 install openshift
+- block :
+  - name: install python openshift module
+    command: pip3 install openshift
 
-- name: create operator-cnv OperatorGroup
-  k8s:
-    state: present
-    definition: "{{ lookup('file', '{{ item }}') }}"
-  with_items:
-  - 'project.yaml'
-  - 'operatorgroup.yaml'
-  - 'csc.cr.yaml'
-  - 'sub.yaml'
-  - 'cnv-hco.yaml'
-  tags: cnv
+  - name: create operator-cnv OperatorGroup
+    k8s:
+      state: present
+      definition: "{{ lookup('file', '{{ item }}') }}"
+    with_items:
+    - 'project.yaml'
+    - 'operatorgroup.yaml'
+    - 'csc.cr.yaml'
+    - 'sub.yaml'
+    - 'cnv-hco.yaml'
+
+  - name: Wait for kubervirt operator installation finish
+    wait_for:
+      delay: 180
+
+  - name: Kubervirt installation done
+  debug:
+    msg: "Kubervirt hco is now in project openshift-cnv"
+
+  tags: [install, cnv]

@@ -5,21 +5,15 @@
     file:
       path: "{{ ocp4_dir }}"
       state: directory
-    become: false
-  
-  - name: Check if ocp-install directory exists
-    stat:
-      path: "{{ ocp4_dir }}"
-    register: stat_result
-   
-  - debug:
-      var: stat_result
+
+  - name: Generate cluster_name
+    set_fact:
+      cluster_name: "{{ ansible_user }}-{{ (99 | random | to_uuid)[:4] }}"
 
   - name: Make install-dir for openshift-install
     file:
       path: "{{ ocp4_install_dir }}"
       state: directory
-    become: false
 
   - name: Download OpenShift installer 
     unarchive:
@@ -27,12 +21,6 @@
       dest: "{{ ocp4_dir }}"
       remote_src: yes
       creates: "{{ ocp4_dir }}/openshift-install"
-
-  - name: Set permission for openshift-install
-    file:
-      path: "{{ ocp4_dir }}/openshift-install"
-      owner: "{{ ansible_ssh_user }}"
-      mode: u=x
 
   - name: create ssh keypair for ocp4 master access
     shell: ssh-keygen -t rsa -b 2048 -N '' -C 'developer' -f ~/.ssh/id_rsa
@@ -95,15 +83,6 @@
   tags: install
 
 - block: 
-  #can remove these after non-user ran openshift-install
-  - name: set permissions for kubeconfig
-    file:
-      path: "{{ ocp4_dir }}"
-      recurse: yes
-      owner: "{{ ansible_ssh_user }}"
-      mode: o+rw
-
-
   - name: Fetch kubadmin password
     shell: cat {{ ocp4_install_dir }}/auth/kubeadmin-password
     register: password
@@ -121,14 +100,13 @@
   - name: Cluster Info
     debug:
       msg: [
-        "To access the cluster on your own machine, copy these to your /etc/hosts",
-     #   "{{ cluster_urls }}",
+        "To access the cluster on your own machine, copy below to /etc/hosts on your local machine:",
+        "{{ cluster_urls }}",
         "",
         "Access web console at https://console-openshift-console.apps.{{ cluster_domain_name }}", 
         "Username: kubeadmin",
         "Password: {{ password.stdout }}"
       ]
-    check_mode: yes
 
 # fix this, put oc in /home/bin instead
   - name: Make bin dir for user
@@ -151,11 +129,4 @@
   - name: Move kubeconfig
     command: mv {{ ocp4_install_dir }}/auth/kubeconfig ~/.kube/config
 
-  - name: set permissions for kubeconfig
-    file:
-      path: "~/.kube/config"
-      owner: "{{ ansible_ssh_user }}"
-      mode: o+rw
-
-
-  tags: config
+  tags: [install, config]

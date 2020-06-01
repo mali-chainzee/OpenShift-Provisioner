@@ -15,7 +15,6 @@
 
   - name: Detroy ocp4 cluster
     shell: ./openshift-install destroy cluster --dir={{ ocp4_install_dir }}
-    become: true
     args: 
       chdir: "{{ ocp4_dir }}" 
 
@@ -23,6 +22,5 @@
     file:
       path: "{{ ocp4_install_dir }}"
       state: absent
-    become: true
 
   tags: destroy
