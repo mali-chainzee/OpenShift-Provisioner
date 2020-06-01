@@ -2,7 +2,6 @@
 # vars file for pre-install
 base_domain: "example.com"
 #cluster_name: "{{ ansible_ssh_user }}"
-cluster_name: "{{ ansible_ssh_user }}-ds2"
 cluster_domain_name: "{{ cluster_name }}.{{ base_domain }}"
 computer_flavor: "m1.large" #flavor is pre-created on osp       show options in documentation
 external_network: "provider_net_shared_3" # don't need to care

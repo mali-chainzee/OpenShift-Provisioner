@@ -33,11 +33,11 @@
     register: bastion_pubkey
 
   - name: Create floating ip for load balancer API
-    shell: openstack floating ip create {{ external_network }} --description "API {{ cluster_domain_name }}" --tag {{ cluster_name }} --os-cloud={{ os_cloud }} -f value -c floating_ip_address
+    shell: openstack floating ip create {{ external_network }} --description "API {{ cluster_domain_name }}" --tag {{ cluster_name }} --tag {{ lb_api }} --os-cloud={{ os_cloud }} -f value -c floating_ip_address
     register: lb_floating_ip
   
   - name: Create floating ip for Ingress
-    shell: openstack floating ip create {{ external_network }} --description "Ingress {{ cluster_domain_name }}" --tag {{ cluster_name }} --os-cloud={{ os_cloud }} -f value -c floating_ip_address
+    shell: openstack floating ip create {{ external_network }} --description "Ingress {{ cluster_domain_name }}" --tag {{ cluster_name }} --tag {{ ingress }} --os-cloud={{ os_cloud }} -f value -c floating_ip_address
     register: ingress_floating_ip
 
   - set_fact:
@@ -91,11 +91,19 @@
     shell: cat {{ ocp4_install_dir }}/metadata.json
     register: cluster_info
 
+  - debug:
+      var: cluster_info
+
   - set_fact:
       cluster_id: "{{ cluster_info.stdout | from_json | json_query('infraID')}}"
+    when: cluster_info.stdout != ""
+
+  - name: Fetch ID of Ingress floating ip
+    shell: openstack floating ip list --os-cloud "{{ os_cloud }}" --floating-ip-address {{ ingress_floating_ip }}  -f value -c ID
+    register: ingress_fip_id
 
   - name: Attach IP to ingress port
-    shell: openstack floating ip set --os-cloud {{ os_cloud }} --port {{ cluster_id }}-ingress-port 432597cf-09e5-4594-96c4-542bcf6b50ee
+    shell: openstack floating ip set --os-cloud {{ os_cloud }} --port {{ cluster_id }}-ingress-port {{ ingress_fip_id.stdout }}
   
   - name: Cluster Info
     debug:
