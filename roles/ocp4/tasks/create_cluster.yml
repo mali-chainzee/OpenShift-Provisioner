@@ -33,16 +33,16 @@
     register: bastion_pubkey
 
   - name: Create floating ip for load balancer API
-    shell: openstack floating ip create {{ external_network }} --description "API {{ cluster_domain_name }}" --tag {{ cluster_name }} --tag {{ lb_api }} --os-cloud={{ os_cloud }} -f value -c floating_ip_address
-    register: lb_floating_ip
+    shell: openstack floating ip create {{ external_network }} --description "API {{ cluster_domain_name }}" --tag {{ cluster_name }} --tag "lb_api" --os-cloud={{ os_cloud }} -f value -c floating_ip_address
+    register: lb_fip
   
   - name: Create floating ip for Ingress
-    shell: openstack floating ip create {{ external_network }} --description "Ingress {{ cluster_domain_name }}" --tag {{ cluster_name }} --tag {{ ingress }} --os-cloud={{ os_cloud }} -f value -c floating_ip_address
-    register: ingress_floating_ip
+    shell: openstack floating ip create {{ external_network }} --description "Ingress {{ cluster_domain_name }}" --tag {{ cluster_name }} --tag "ingress" --os-cloud={{ os_cloud }} -f value -c floating_ip_address
+    register: ingress_fip
 
   - set_fact:
-      lb_floating_ip={{ lb_floating_ip.stdout }}
-      ingress_floating_ip={{ ingress_floating_ip.stdout }}
+      lb_fip_addr={{ lb_fip.stdout }}
+      ingress_fip_addr={{ ingress_fip.stdout }}
 
   - name: Generate install-config.yaml 
     template:
@@ -55,17 +55,17 @@
   - name: generate /etc/hosts content
     set_fact:
       cluster_urls: |
-        {{ lb_floating_ip }}  api.{{ cluster_domain_name }}
-        {{ ingress_floating_ip }}  console-openshift-console.apps.{{ cluster_domain_name }}
-        {{ ingress_floating_ip }}  integrated-oauth-server-openshift-authentication.apps.{{ cluster_domain_name }}
-        {{ ingress_floating_ip }}  oauth-openshift.apps.{{ cluster_domain_name }}
-        {{ ingress_floating_ip }}  prometheus-k8s-openshift-monitoring.apps.{{ cluster_domain_name }}
-        {{ ingress_floating_ip }}  grafana-openshift-monitoring.apps.{{ cluster_domain_name }}
-
+        {{ lb_fip_addr }}  api.{{ cluster_domain_name }}
+        {{ ingress_fip_addr }}  console-openshift-console.apps.{{ cluster_domain_name }}
+        {{ ingress_fip_addr }}  integrated-oauth-server-openshift-authentication.apps.{{ cluster_domain_name }}
+        {{ ingress_fip_addr }}  oauth-openshift.apps.{{ cluster_domain_name }}
+        {{ ingress_fip_addr }}  prometheus-k8s-openshift-monitoring.apps.{{ cluster_domain_name }}
+        {{ ingress_fip_addr }}  grafana-openshift-monitoring.apps.{{ cluster_domain_name }}
+        
   - name: create local /etc/hosts entry for cluster
-    copy:
-      dest: /etc/hosts
-      content: "{{ cluster_urls }}"
+    blockinfile:
+      block: "{{ cluster_urls }}"
+      path: /etc/hosts 
     become: true
 
   - name: Run openshift-install
@@ -99,7 +99,7 @@
     when: cluster_info.stdout != ""
 
   - name: Fetch ID of Ingress floating ip
-    shell: openstack floating ip list --os-cloud "{{ os_cloud }}" --floating-ip-address {{ ingress_floating_ip }}  -f value -c ID
+    shell: openstack floating ip list --os-cloud "{{ os_cloud }}" --tags "ingress","{{ cluster_name }}"  -f value -c ID
     register: ingress_fip_id
 
   - name: Attach IP to ingress port
@@ -108,15 +108,11 @@
   - name: Cluster Info
     debug:
       msg: [
-        "To access the cluster on your own machine, copy below to /etc/hosts on your local machine:",
-        "{{ cluster_urls }}",
-        "",
         "Access web console at https://console-openshift-console.apps.{{ cluster_domain_name }}", 
         "Username: kubeadmin",
         "Password: {{ password.stdout }}"
       ]
-
-# fix this, put oc in /home/bin instead
+      
   - name: Make bin dir for user
     file:
       path: ~/bin
@@ -127,7 +123,7 @@
       src: "{{ ocp4_cli_url }}"
       dest: "~/bin/"
       remote_src: yes
-      creates: ~/bin/oc
+#      creates: ~/bin/oc
 
   - name: Create .~/kube dir
     file: 

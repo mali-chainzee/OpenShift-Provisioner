@@ -11,7 +11,7 @@
 - name: Destroy ocp4 cluster
   tags: destroy
   include_tasks: destroy_cluster.yml
-
+  
 
 
 

@@ -12,8 +12,9 @@ Usage
 Ansible `tags` are used for different stages of cluster intallation. 
 `ansible-playbook playbooks/create_cluster.yml --tags=<options>` 
 
-`--tags=install` creates a cluster without container-native virtulation<br/>
-`--tags=cnv` installs cnv on your existing ocp4 cluster<br/>
+`--tags=install` creates a cluster with cnv<br/>
+`--tags=config -e cluster_name=<cluster_name>` does post install works on existing cluster<br/>
+`--tags=cnv -e cluster_name=<cluster_name>` installs cnv on your existing ocp4 cluster<br/>
 `--tags=destroy` destroys cluster and recycles openstack resources<br/>
 
 Role Variables

@@ -8,11 +8,12 @@ external_network: "provider_net_shared_3" # don't need to care
 os_cloud: "rhos-d2"
 # OCP4 installer info. Don't change
 
-ocp4_version: "4.3"
-ocp4_full_version: "4.3.13"
+ocp4_version: "stable"
+ocp4_full_version: "stable"
 ocp4_installer_url: "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ ocp4_full_version }}/openshift-install-linux.tar.gz"
 ocp4_pull_secret: "{{ lookup('file', '~/.ocp4_pull_secret') | from_json }}" # get rid of this
 ocp4_dir: "/home/{{ ansible_ssh_user }}/openshift-{{ ocp4_full_version }}" 
 ocp4_install_dir: "{{ ocp4_dir }}/{{ cluster_name }}-cluster"
-ocp4_cli_url: "https://mirror.openshift.com/pub/openshift-v4/clients/oc/{{ ocp4_version }}/linux/oc.tar.gz"
-#rhcos_url: "https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/{{ ocp4_version }}/{{ ocp4_full_version }}/rhcos-{{ ocp4_full_version }}-x86_64-openstack.x86_64.qcow2.gz"
+
+ocp4_cli_version: "latest"
+ocp4_cli_url: "https://mirror.openshift.com/pub/openshift-v4/clients/oc/{{ ocp4_cli_version }}/linux/oc.tar.gz"
