@@ -1,5 +1,5 @@
 ---
 # vars file for install-dependencies
 # Red Hat subscription credentials for bsation RHEL8
-redhat_subscription_username: "chainzeeli12"
-redhat_subscription_password: "M@rkGPA4.01996"
+redhat_subscription_username: 
+redhat_subscription_password: 
