@@ -23,7 +23,7 @@ Note: Modify ocp4_version if you want to install a different cluster version. Ne
 ```
 base_domain: #defalult example.com
 cluster_name: #default <kerboros username>
-ocp4_version: #default 4.3
-ocp4_full_version: #default 4.3.13
+ocp4_version: #default stable
+ocp4_full_version: #default stable
 ```
 
